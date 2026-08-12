@@ -37,8 +37,8 @@
   let entries=[]; let sales=JSON.parse(localStorage.getItem(key)||'[]');
   const yen=n=>'￥'+n.toLocaleString('ja-JP');
   function add(n){entries.push(n);render()}
-  function buttons(target, values, adjustment=false){document.querySelector(target).innerHTML=values.map(n=>`<button class="price ${adjustment?'adjust':''}" data-price="${n}"><span>＋</span>${n.toLocaleString()}<small>円</small>${adjustment?'<small> 調整</small>':''}</button>`).join('');}
-  buttons('#prices',[...prices,50],true); buttons('#large-prices',big);
+  function buttons(target, values){document.querySelector(target).innerHTML=values.map(n=>{const adjustment=n===50; return `<button class="price ${adjustment?'adjust':''}" data-price="${n}"><span>＋</span>${n.toLocaleString()}<small>円</small>${adjustment?'<small> 調整</small>':''}</button>`}).join('');}
+  buttons('#prices',[...prices,50]); buttons('#large-prices',big);
   document.addEventListener('click',e=>{const p=e.target.closest('[data-price]');if(p)add(+p.dataset.price)});
   function render(){const sum=entries.reduce((a,b)=>a+b,0), counts={}; entries.forEach(n=>counts[n]=(counts[n]||0)+1); document.querySelector('#total').textContent=yen(sum); document.querySelector('#count').textContent=entries.length+'本'; document.querySelector('#detail-count').textContent=entries.length?entries.length+'本':'まだありません'; document.querySelector('#confirm').textContent='✓ 売上確定 '+yen(sum);
     document.querySelector('#breakdown').innerHTML=entries.length?Object.entries(counts).sort((a,b)=>a[0]-b[0]).map(([p,c])=>`<div class="line"><span>${(+p).toLocaleString()}円 × ${c}</span><b>${yen(+p*c)}</b></div>`).join(''):'<p class="empty">上の金額ボタンを押すと、ここに本数が出ます</p>';
