@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="theme-color" content="#176b52" />
+  <title>花屋のかんたん電卓</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, -apple-system, sans-serif; color: #19342b; background: #f5f8f4; }
+    * { box-sizing: border-box; } body { margin: 0; } button, input { font: inherit; }
+    main { max-width: 680px; min-height: 100vh; margin: auto; padding: 16px 14px 118px; }
+    header { display:flex; align-items:center; gap:10px; margin-bottom:12px; } h1 { font-size: 21px; margin:0; } header p { margin:2px 0 0; color:#6b7e75; font-size:11px; letter-spacing:.08em; }
+    .mark { display:grid; place-items:center; width:42px; height:42px; border-radius:14px; color:#fff; background:#176b52; font-size:23px; }
+    .card { background:#fff; border-radius:20px; padding:16px; box-shadow:0 3px 14px #183c2a12; }
+    .total { margin-bottom:12px; background:linear-gradient(135deg,#176b52,#278260); color:#fff; } .total .row { display:flex; justify-content:space-between; font-weight:700; } .total strong { display:block; margin:4px 0; font-size:42px; letter-spacing:-.04em; } .total small { opacity:.8; }
+    .heading { display:flex; align-items:center; justify-content:space-between; margin:16px 2px 8px; } .heading h2 { margin:0; font-size:17px; } .heading span { color:#63766d; font-size:12px; }
+    .prices { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; } .prices.large { grid-template-columns:repeat(3,1fr); margin-top:8px; }
+    .price { min-height:76px; border:0; border-radius:15px; background:#fff; color:#176b52; box-shadow:0 2px 10px #183c2a12; font-size:22px; font-weight:800; cursor:pointer; } .price span { font-size:15px; } .price small { font-size:12px; } .price.adjust { background:#fff6de; color:#9a6800; }
+    .breakdown { margin-top:16px; } .line { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #e7eee9; } .line:last-child { border:0; } .empty { color:#74867d; margin:0; }
+    .tools { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; } .tool { border:1px solid #dce8df; background:#fff; border-radius:12px; padding:11px 7px; font-weight:700; color:#315344; cursor:pointer; }
+    .history { margin-top:16px; } details summary { cursor:pointer; font-weight:800; } .sale { border-top:1px solid #e7eee9; padding:10px 0; font-size:14px; } .sale b { display:block; } .sale small { color:#61756b; }
+    .bar { position:fixed; bottom:0; left:0; right:0; padding:10px 14px calc(10px + env(safe-area-inset-bottom)); background:#fffffff2; backdrop-filter:blur(8px); box-shadow:0 -3px 16px #183c2a12; display:flex; gap:8px; justify-content:center; } .bar button { border:0; border-radius:13px; padding:14px 13px; font-weight:800; cursor:pointer; } #confirm { background:#176b52; color:#fff; flex:1; max-width:420px; } .secondary { background:#e9f0eb; color:#315344; }
+  </style>
+</head>
+<body>
+<main>
+  <header><div class="mark">✿</div><div><h1>花屋のかんたん電卓</h1><p>FLOWER SHOP TOOL</p></div></header>
+  <section class="card total"><div class="row"><span>合計</span><span id="count">0本</span></div><strong id="total">￥0</strong><small>同じ金額を押すたびに、1本ずつ追加されます</small></section>
+  <section><div class="heading"><h2>単価をタップ</h2><span>1タップ＝1本</span></div><div class="prices" id="prices"></div><div class="prices large" id="large-prices"></div></section>
+  <section class="card breakdown"><div class="heading" style="margin-top:0"><h2>内訳</h2><span id="detail-count">まだありません</span></div><div id="breakdown"><p class="empty">上の金額ボタンを押すと、ここに本数が出ます</p></div></section>
+  <section class="tools"><button class="tool" id="undo">↶ 1つ戻す</button><button class="tool" id="clear">全消去</button></section>
+  <section class="card history"><details open><summary>入力履歴 <span id="history-count"></span></summary><div id="history"><p class="empty">売上確定した会計がここに残ります</p></div></details></section>
+</main>
+<div class="bar"><button class="secondary" id="copy">合計コピー</button><button id="confirm">✓ 売上確定 ￥0</button></div>
+<script>
+  const prices=[100,150,200,250,300,400,500], big=[1000,2000,3000], key='florist-calculator-history-v1';
+  let entries=[]; let sales=JSON.parse(localStorage.getItem(key)||'[]');
+  const yen=n=>'￥'+n.toLocaleString('ja-JP');
+  function add(n){entries.push(n);render()}
+  function buttons(target, values, adjustment=false){document.querySelector(target).innerHTML=values.map(n=>`<button class="price ${adjustment?'adjust':''}" data-price="${n}"><span>＋</span>${n.toLocaleString()}<small>円</small>${adjustment?'<small> 調整</small>':''}</button>`).join('');}
+  buttons('#prices',[...prices,50],true); buttons('#large-prices',big);
+  document.addEventListener('click',e=>{const p=e.target.closest('[data-price]');if(p)add(+p.dataset.price)});
+  function render(){const sum=entries.reduce((a,b)=>a+b,0), counts={}; entries.forEach(n=>counts[n]=(counts[n]||0)+1); document.querySelector('#total').textContent=yen(sum); document.querySelector('#count').textContent=entries.length+'本'; document.querySelector('#detail-count').textContent=entries.length?entries.length+'本':'まだありません'; document.querySelector('#confirm').textContent='✓ 売上確定 '+yen(sum);
+    document.querySelector('#breakdown').innerHTML=entries.length?Object.entries(counts).sort((a,b)=>a[0]-b[0]).map(([p,c])=>`<div class="line"><span>${(+p).toLocaleString()}円 × ${c}</span><b>${yen(+p*c)}</b></div>`).join(''):'<p class="empty">上の金額ボタンを押すと、ここに本数が出ます</p>';
+    document.querySelector('#history-count').textContent=sales.length?'('+sales.length+'件)':''; document.querySelector('#history').innerHTML=sales.length?sales.map(s=>`<div class="sale"><b>${yen(s.total)}　${s.entries.length}本</b><small>${s.time}<br>${s.entries.map(n=>n+'円').join(' → ')}</small></div>`).join(''):'<p class="empty">売上確定した会計がここに残ります</p>';
+  }
+  document.querySelector('#undo').onclick=()=>{entries.pop();render()}; document.querySelector('#clear').onclick=()=>{if(entries.length&&confirm('今の入力をすべて消しますか？')){entries=[];render()}};
+  document.querySelector('#confirm').onclick=()=>{if(!entries.length)return; sales.unshift({entries:[...entries],total:entries.reduce((a,b)=>a+b,0),time:new Date().toLocaleString('ja-JP')}); localStorage.setItem(key,JSON.stringify(sales)); entries=[];render()};
+  document.querySelector('#copy').onclick=async()=>{await navigator.clipboard.writeText(document.querySelector('#total').textContent);alert('合計をコピーしました')}; render();
+</script>
+</body>
+</html>
